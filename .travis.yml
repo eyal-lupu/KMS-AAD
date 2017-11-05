@@ -11,3 +11,5 @@ jdk:
 
 script:
    - ./gradlew check buildDocker
+
+# After success will push to Docker Hub
