@@ -6,8 +6,8 @@ services:
   - docker
   
 jdk:
-#  - oraclejdk8
+  - oraclejdk8
   - openjdk8
 
 script:
-   - ./gradlew -d check buildDocker
+   - ./gradlew check buildDocker
