@@ -4,4 +4,4 @@ jdk:
 #  - oraclejdk8
   - openjdk8
 
-script: ./gradelw build buildDocker check
+script:  ./gradlew build check buildDocker
