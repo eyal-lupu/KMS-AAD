@@ -12,7 +12,7 @@ jdk:
 script:
    - ./gradlew check buildDocker
 
-# After success will push to Docker Hub
+# After success will push image to Docker Hub
 after_success:
   - set
   - if [ "$TRAVIS_BRANCH" == "master" ]; then
