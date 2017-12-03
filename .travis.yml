@@ -17,5 +17,5 @@ after_success:
   - set
   - if [ "$TRAVIS_BRANCH" == "master" ]; then
     docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
-    docker push USER/REPO;
+    docker push eyallupu/kms-aad;
     fi
