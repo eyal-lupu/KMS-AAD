@@ -14,8 +14,8 @@ script:
 
 # After success will push image to Docker Hub
 after_success:
-  - set
   - if [ "$TRAVIS_BRANCH" == "master" ]; then
     docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
-    docker push eyallupu/kms-aad;
+    docker images;
+    docker push eyallupu/aad-sample-webapp:latest;
     fi
