@@ -42,7 +42,7 @@ dependencies {
 task buildDocker(type: Docker, dependsOn: build) {
   //applicationName = jar.baseName
   //tagVersion = jar.version
-  tag="eyallupu/$jar.baseName:latest"
+  tag="eyallupu/$jar.baseName"
   dockerfile = file('Dockerfile')
   doFirst {
     copy {
