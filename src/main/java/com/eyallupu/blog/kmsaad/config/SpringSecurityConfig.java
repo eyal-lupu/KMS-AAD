@@ -30,8 +30,8 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
 	@Autowired
 	public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
 		// Some fake users
-		auth.inMemoryAuthentication().withUser("eyal1").password("eyal1-pass").roles("USER").and().withUser("eyal2")
-				.password("eyal2-pass").roles("USER");
+		auth.inMemoryAuthentication().withUser("bob").password("bob").roles("USER").and().withUser("alice")
+				.password("alice").roles("USER");
 	}
 
 }
