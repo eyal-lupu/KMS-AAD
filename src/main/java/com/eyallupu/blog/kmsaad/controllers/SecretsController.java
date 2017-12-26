@@ -44,28 +44,51 @@ public class SecretsController {
 	@Autowired
 	private AWSKMS awskms;
 
+	/**
+	 * Alias for the CMK - in practice this can be any key-id (e.g. ARN as well) but
+	 * to make things easier for this example I assume an alias is used (see
+	 * {@link #validateMasterKey()})
+	 */
 	@Value("${SecretsController.cmkAlias}")
 	private String cmkAlias;
 
+	/**
+	 * This map will store the secrets - a mapping from secret name to an
+	 * {@link Envelope}.
+	 * 
+	 * NB: In practice I should have used the user name as a pseudo key of that map
+	 * (or a part of a composed key) but this would have make the example even more
+	 * complicated.
+	 */
 	private Map<String, Envelope> secrets = new HashMap<>();
 
 	@RequestMapping(path = "/secrets/{name}", method = RequestMethod.POST, consumes = "text/plain")
 	public ResponseEntity<String> put(@PathVariable("name") String name, @RequestBody String value, Principal principal)
 			throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException,
 			BadPaddingException, InvalidAlgorithmParameterException {
+
+		// Must have a name and value
 		if (null == value || null == name) {
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
 
 		// Encrypt
+
+		// We start by generating a data key
 		GenerateDataKeyRequest dataKeyRequest = new GenerateDataKeyRequest().withKeyId(cmkAlias).withKeySpec("AES_128");
 		GenerateDataKeyResult dataKeyResult = awskms.generateDataKey(dataKeyRequest);
 
+		// The data key is just raw material - build a JCE key for Java to use
 		Key key = buildJCEKey(dataKeyResult.getPlaintext().asReadOnlyBuffer());
-		dataKeyResult.getPlaintext().clear();
+		dataKeyResult.getPlaintext().clear(); // Clear it ASAP!!
+
+		// Now encrypt - usual Java encryption and store as an envelope containing:
+		// - The data key in the encrypted form (needs the master key to open)
+		// - The encrypted payload
 		String encrypted = encrypt(value, key);
 		Envelope envelope = new Envelope(dataKeyResult.getCiphertextBlob(), encrypted);
 
+		// Store in map - probably in real life will go to a less volatile storage ...
 		if (null == secrets.put(name, envelope)) {
 			return new ResponseEntity<>(HttpStatus.CREATED);
 		} else {
@@ -77,6 +100,8 @@ public class SecretsController {
 	public ResponseEntity<String> get(@PathVariable("name") String name, Principal principal)
 			throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException,
 			BadPaddingException, InvalidAlgorithmParameterException {
+
+		// NAme of the secret is a must
 		if (null == name) {
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
@@ -89,7 +114,7 @@ public class SecretsController {
 			DecryptRequest decryptRequest = new DecryptRequest().withCiphertextBlob(envelope.key);
 			DecryptResult decryptResult = awskms.decrypt(decryptRequest);
 
-			// Build a JCE Key
+			// Build a JCE Key out of it - for Java to use
 			Key key = buildJCEKey(decryptResult.getPlaintext().asReadOnlyBuffer());
 			decryptResult.getPlaintext().clear();
 
@@ -101,7 +126,10 @@ public class SecretsController {
 	}
 
 	/**
-	 * Validates that the required master key (CMK) exists
+	 * Validates that the required master key (CMK) exists. This is just an init
+	 * method to make sure I have the CMK ready for me.
+	 * 
+	 * To keep it easier I am using alias and not an ARN
 	 */
 	@PostConstruct
 	public void validateMasterKey() throws Exception {
@@ -124,7 +152,6 @@ public class SecretsController {
 		cipher.init(Cipher.ENCRYPT_MODE, key);
 
 		byte[] enc = cipher.doFinal(cleartext.getBytes());
-
 		return Base64.getEncoder().encodeToString(enc);
 	}
 
@@ -134,9 +161,7 @@ public class SecretsController {
 		byte[] decodeBase64src = Base64.getDecoder().decode(ciphertext);
 
 		Cipher cipher = Cipher.getInstance("AES");
-
 		cipher.init(Cipher.DECRYPT_MODE, key);
-		System.out.println(new String(cipher.doFinal(decodeBase64src)));
 		return new String(cipher.doFinal(decodeBase64src));
 	}
 
@@ -147,12 +172,20 @@ public class SecretsController {
 	}
 
 	private static class Envelope {
+
+		/**
+		 * The encryption data (secondary) key encrypted by the CMK
+		 */
 		final ByteBuffer key;
+
+		/**
+		 * The encrypted form
+		 */
 		final String payload;
 
-		public Envelope(ByteBuffer key, String cipherText) {
+		public Envelope(ByteBuffer key, String payload) {
 			this.key = key;
-			this.payload = cipherText;
+			this.payload = payload;
 		}
 
 	}
