@@ -11,6 +11,10 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.www.BasicAuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
+/**
+ * Authentication entry point for BASIC AUTH. Provides a message in body as well
+ * as headers.
+ */
 @Component
 public class AuthenticationEntryPoint extends BasicAuthenticationEntryPoint {
 	@Override
@@ -22,9 +26,8 @@ public class AuthenticationEntryPoint extends BasicAuthenticationEntryPoint {
 		writer.println("HTTP Status 401 - " + authEx.getMessage());
 	}
 
-	@Override
-	public void afterPropertiesSet() throws Exception {
+	public AuthenticationEntryPoint() {
 		setRealmName("KMS-AAD-Sample");
-		super.afterPropertiesSet();
 	}
+
 }

@@ -5,7 +5,11 @@ import org.springframework.beans.factory.FactoryBean;
 import com.amazonaws.services.kms.AWSKMS;
 import com.amazonaws.services.kms.AWSKMSClientBuilder;
 
-public class KMSProvider implements FactoryBean<AWSKMS> {
+/**
+ * A simple factory bean to provide the AWSKMS instance (as a singleton). This
+ * factory bean is registered using {@link KMSConfig}.
+ */
+public class AWSKMSFactoryBean implements FactoryBean<AWSKMS> {
 
 	private AWSKMS awskms = AWSKMSClientBuilder.defaultClient();
 

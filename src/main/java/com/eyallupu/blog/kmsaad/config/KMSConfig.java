@@ -5,12 +5,17 @@ import org.springframework.context.annotation.Configuration;
 
 import com.amazonaws.services.kms.AWSKMS;
 
+/**
+ * Configures the KMS factory bean AND bean
+ * 
+ * @see AWSKMSFactoryBean
+ */
 @Configuration
 public class KMSConfig {
 
 	@Bean(name = "kms")
-	public KMSProvider kmsFactory() {
-		return new KMSProvider();
+	public AWSKMSFactoryBean kmsFactory() {
+		return new AWSKMSFactoryBean();
 	}
 
 	@Bean

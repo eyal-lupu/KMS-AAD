@@ -37,7 +37,17 @@ import com.amazonaws.services.kms.model.DescribeKeyRequest;
 import com.amazonaws.services.kms.model.GenerateDataKeyRequest;
 import com.amazonaws.services.kms.model.GenerateDataKeyResult;
 import com.amazonaws.services.kms.model.NotFoundException;
+import com.eyallupu.blog.kmsaad.config.SpringSecurityConfig;
 
+/**
+ * This is the core of the AAD (+ envelope encryption) using KMS example. The
+ * rest of the classes in this project are supporting environment for providing
+ * a 'runnable web environment' to demonstrate the AAD feature. I could have
+ * probably eliminate it altogether and just code the functionality here into a
+ * Lambda function or two but it would have been even more complicated and less
+ * traditional for readers to follow - bottom line: if you have time to look
+ * into just one source code than look down here...
+ */
 @RestController
 public class SecretsController {
 
@@ -62,17 +72,30 @@ public class SecretsController {
 	 */
 	private Map<String, Envelope> secrets = new HashMap<>();
 
+	/**
+	 * This is the method performing the encryption and 'storing' into
+	 * {@link #secrets}. Can be invoked using the following CURL command:
+	 * 
+	 * <pre>
+	 *   curl -X POST -H 'Content-type: text/plain' -d 'my-secret-value' \ 
+	 *     --user eyal1:eyal1-pass  http://localhost:8080/secrets/my-secret-name
+	 * </pre>
+	 * 
+	 * Credentials are to be taken from {@link SpringSecurityConfig}.
+	 * 
+	 * @param name
+	 * @param value
+	 * @param principal
+	 */
 	@RequestMapping(path = "/secrets/{name}", method = RequestMethod.POST, consumes = "text/plain")
 	public ResponseEntity<String> put(@PathVariable("name") String name, @RequestBody String value, Principal principal)
 			throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException,
 			BadPaddingException, InvalidAlgorithmParameterException {
 
-		// Must have a name and value
+		// Must have a name and value. Some sanity
 		if (null == value || null == name) {
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
-
-		// Encrypt
 
 		// We start by generating a data key
 		GenerateDataKeyRequest dataKeyRequest = new GenerateDataKeyRequest().withKeyId(cmkAlias).withKeySpec("AES_128");
@@ -96,6 +119,19 @@ public class SecretsController {
 		}
 	}
 
+	/**
+	 * If {@link #put(String, String, Principal)} is the method to load secrets into
+	 * the 'storage' than this is the one used for fetching. It is pretty much
+	 * straight forward and can be invoked using a CURL similar to the following:
+	 * 
+	 * <pre>
+	 * curl -X GET -H 'Content-type: text/plain' --user eyal1:eyal1-pass \
+	 *    http://localhost:8080/secrets/my-secret-name
+	 * </pre>
+	 * 
+	 * As before - credentials are taken from {@link SpringSecurityConfig}
+	 * 
+	 */
 	@RequestMapping(path = "/secrets/{name}", method = RequestMethod.GET)
 	public ResponseEntity<String> get(@PathVariable("name") String name, Principal principal)
 			throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException,
@@ -125,6 +161,8 @@ public class SecretsController {
 		}
 	}
 
+	// Some helper methods below
+
 	/**
 	 * Validates that the required master key (CMK) exists. This is just an init
 	 * method to make sure I have the CMK ready for me.
@@ -145,6 +183,9 @@ public class SecretsController {
 		}
 	}
 
+	/**
+	 * Traditional JCE encryption - nothing to do with AWS
+	 */
 	private String encrypt(String cleartext, Key key) throws NoSuchAlgorithmException, NoSuchPaddingException,
 			InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException {
 
@@ -155,6 +196,9 @@ public class SecretsController {
 		return Base64.getEncoder().encodeToString(enc);
 	}
 
+	/**
+	 * Traditional JCE decryption - nothing to do with AWS
+	 */
 	private String decrypt(String ciphertext, Key key) throws NoSuchAlgorithmException, NoSuchPaddingException,
 			InvalidKeyException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException {
 
@@ -165,6 +209,10 @@ public class SecretsController {
 		return new String(cipher.doFinal(decodeBase64src));
 	}
 
+	/**
+	 * Builds a JCE Key out of a ByteBuffer (the ByteBuffer was returned from the
+	 * KMS when a secondary key was generated)
+	 */
 	private Key buildJCEKey(ByteBuffer raw) {
 		byte[] arr = new byte[raw.remaining()];
 		raw.get(arr);
