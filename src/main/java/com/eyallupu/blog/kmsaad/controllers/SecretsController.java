@@ -7,6 +7,7 @@ import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 import java.security.Principal;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -98,7 +99,8 @@ public class SecretsController {
 		}
 
 		// We start by generating a data key
-		GenerateDataKeyRequest dataKeyRequest = new GenerateDataKeyRequest().withKeyId(cmkAlias).withKeySpec("AES_128");
+		GenerateDataKeyRequest dataKeyRequest = new GenerateDataKeyRequest().withKeyId(cmkAlias).withKeySpec("AES_128")
+				.withEncryptionContext(Collections.singletonMap("user", principal.getName()));
 		GenerateDataKeyResult dataKeyResult = awskms.generateDataKey(dataKeyRequest);
 
 		// The data key is just raw material - build a JCE key for Java to use
@@ -147,7 +149,8 @@ public class SecretsController {
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		} else {
 			// Get the encrypted data key and open using the CMK
-			DecryptRequest decryptRequest = new DecryptRequest().withCiphertextBlob(envelope.key);
+			DecryptRequest decryptRequest = new DecryptRequest().withCiphertextBlob(envelope.key)
+					.withEncryptionContext(Collections.singletonMap("user", principal.getName()));
 			DecryptResult decryptResult = awskms.decrypt(decryptRequest);
 
 			// Build a JCE Key out of it - for Java to use
