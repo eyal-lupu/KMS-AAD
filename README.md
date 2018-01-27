@@ -24,8 +24,8 @@ Which will build the image and tag it as *eyallupu/aad-sample-webapp*. Alternati
 [~eyal]$ docker pull eyallupu/aad-sample-webapp
 ```
 
-## Run
-### Run locally
+## Starting The Server
+### Locally
 The project is using spring-boot, use the following to build and boot a server (but read this section to the end before doing so!):
 ```shell
 [~eyal]$ ./gradlew bootRun
@@ -36,15 +36,33 @@ with AWS it requires the correct configuration to authenticate with AWS. If you 
 the credentials are available via AWS\_ACCESS\_KEY\_ID and AWS\_SECRET\_ACCESS\_KEY or the default credentials file exists 
 the above will work - otherwise the environment needs to be setup - see below about 'Authentication with AWS').
 
-### Run as a Docker Container
+The port on which the server will listen will be 8080.
+
+### As a Docker Container
 For a successful execution as a Docker container the appropriate AWS credentials and region **must** be provided to the container. One way
 is using environment variables as demonstrated below but there are better (and more secure) ways (i.e. mapping ~/.aws into your container
 as a volume). See https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html for more details 
 ```shell
-[~eyal]$ docker run -d  -P -name aad-example  --env AWS_ACCESS_KEY_ID=<replace> --env AWS_SECRET_ACCESS_KEY=<replace> --env AWS_REGION=<replace>  eyallupu/aad-sample-webapp
+[~eyal]$ docker run -d  -P --env AWS_ACCESS_KEY_ID=<replace> \
+    --env AWS_SECRET_ACCESS_KEY=<replace> --env AWS_REGION=<replace>  \
+    eyallupu/aad-sample-webapp
 ```
 
+The next is to note down the host port which was mapped into the container's 8080 port, the following will list that out:
+```shell
+[~eyal]$ docker ps -n 1 --format "{{.ID}}" | xargs docker port
+8080/tcp -> 0.0.0.0:32768
+``` 
+In the above example the port is 32768.
 
+## Client Example
+Once the server is running we can give it a try using CURL. The server is preconfigured with two users 'bob' and 'alice' with passwords
+the same as the user name (e.g. bob/bob). We can now upload a secret as Alice (remember to replace host and port with actual values):
+
+```shell
+[~eyal]$ curl -X POST -H 'Content-type: text/plain' -d 'my-secret-value' \
+   --user alice:alice  http://localhost:8080/secrets/my-secret-name
+```
 
 ## Costs
 Do remember that this example is using AWS KMS which involves costs.
