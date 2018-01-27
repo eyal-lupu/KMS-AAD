@@ -25,7 +25,7 @@ Which will build the image and tag it as *eyallupu/aad-sample-webapp*. Alternati
 ```
 
 ## Starting The Server
-### Locally
+### Local
 The project is using spring-boot, use the following to build and boot a server (but read this section to the end before doing so!):
 ```shell
 [~eyal]$ ./gradlew bootRun
