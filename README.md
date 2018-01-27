@@ -32,16 +32,19 @@ The project is using spring-boot, use the following to build and boot a server (
 ```
 
 In practice the question if the above will boot successfully or not depends on your environment. As the process has to connect
-with AWS it requires the correct configuration to authenticate with AWS. If you environment is setup for that (for example
-the credentials are available via AWS\_ACCESS\_KEY\_ID and AWS\_SECRET\_ACCESS\_KEY or the default credentials file exists 
-the above will work - otherwise the environment needs to be setup - see below about 'Authentication with AWS').
+with AWS it requires the correct configuration to authenticate with AWS. If the environment is setup for that (for example
+the credentials are available via AWS\_ACCESS\_KEY\_ID and AWS\_SECRET\_ACCESS\_KEY or the default credentials file exists) 
+the above will work, otherwise the environment needs to be setup - see https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html
+for some hints on how to do that.
 
-The port on which the server will listen will be 8080.
+By default this service will listen on port 8080.
 
 ### As a Docker Container
-For a successful execution as a Docker container the appropriate AWS credentials and region **must** be provided to the container. One way
+For a successful execution as a Docker container the appropriate AWS credentials and region must be provided to the container. One way
 is using environment variables as demonstrated below but there are better (and more secure) ways (i.e. mapping ~/.aws into your container
-as a volume). See https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html for more details 
+as a volume). See https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html for more details on AWS clients environment 
+setup.
+
 ```shell
 [~eyal]$ docker run -d  -P --env AWS_ACCESS_KEY_ID=<replace> \
     --env AWS_SECRET_ACCESS_KEY=<replace> --env AWS_REGION=<replace>  \
@@ -56,15 +59,17 @@ The next is to note down the host port which was mapped into the container's 808
 In the above example the port is 32768.
 
 ## Client Example
-Once the server is running we can give it a try using CURL. The server is preconfigured with two users 'bob' and 'alice' with passwords
-the same as the user name (e.g. bob/bob). We can now upload a secret as Alice (remember to replace host and port with actual values):
+Once the server is running we can give it a try using CURL. The server is preconfigured with two users: 'bob' and 'alice' with passwords
+the same as the user name (e.g. bob/bob). Those users can be used to demo the usage of AWS following those steps:
+
+We can upload a secret as Alice (remember to replace host and port with actual values):
 
 ```shell
 [~eyal]$ curl -X POST -H 'Content-type: text/plain' -d 'my-secret-value' \
    --user alice:alice  http://localhost:8080/secrets/my-secret-name
 ```
 
-We can now retrieve the server using Alice's credentials:
+Next we can retrieve the secret using Alice's credentials:
 
 ```shell
 [~eyal]$ curl -X GET --user alice:alice  http://localhost:8080/secrets/my-secret-name
@@ -82,4 +87,4 @@ However, if Bob will try to fetch the same secret he will be blocked by the KMS
 ```
 
 ## Costs
-Do remember that this example is using AWS KMS which involves costs.
+Do remember that this example is using AWS KMS which involves costs for both master keys (CMK) and API calls.
