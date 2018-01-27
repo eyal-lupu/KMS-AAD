@@ -37,15 +37,16 @@ the credentials are available via AWS\_ACCESS\_KEY\_ID and AWS\_SECRET\_ACCESS\_
 the above will work - otherwise the environment needs to be setup - see below about 'Authentication with AWS').
 
 ### Run as a Docker Container
-For a successful execution as a Docker container the appropriate AWS credentials **must** be provided to the container
+For a successful execution as a Docker container the appropriate AWS credentials and region **must** be provided to the container. One way
+is using environment variables as demonstrated below but there are better (and more secure) ways (i.e. mapping ~/.aws into your container
+as a volume). See https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html for more details 
 ```shell
-[~eyal]$ docker run -d  -P -name aad-example  eyallupu/aad-sample-webapp
+[~eyal]$ docker run -d  -P -name aad-example  --env AWS_ACCESS_KEY_ID=<replace> --env AWS_SECRET_ACCESS_KEY=<replace> --env AWS_REGION=<replace>  eyallupu/aad-sample-webapp
 ```
 
 
-https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html
 
--Credentials
-- costs
-- client example
+## Costs
+Do remember that this example is using AWS KMS which involves costs.
 
+TODO: client example
