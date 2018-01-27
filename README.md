@@ -64,6 +64,23 @@ the same as the user name (e.g. bob/bob). We can now upload a secret as Alice (r
    --user alice:alice  http://localhost:8080/secrets/my-secret-name
 ```
 
+We can now retrieve the server using Alice's credentials:
+
+```shell
+[~eyal]$ curl -X GET --user alice:alice  http://localhost:8080/secrets/my-secret-name
+```
+
+However, if Bob will try to fetch the same secret he will be blocked by the KMS
+
+```shell
+[~eyal]$ curl -X GET --user bob:bob  http://localhost:8080/secrets/my-secret-name
+
+{"timestamp":1517092879867,"status":500,"error":"Internal Server Error",
+"exception":"com.amazonaws.services.kms.model.InvalidCiphertextException",
+ "message":"org.springframework.web.util.NestedServletException: Request processing failed; nested exception is com.amazonaws.services.kms.model.InvalidCiphertextException: null (Service: AWSKMS; Status Code: 400; Error Code: InvalidCiphertextException; Request ID: 3a45ce22-03b4-11e8-8872-c1cc2f0068f1)",
+ "path":"/secrets/my-secret-name"}
+```
+
 ## Costs
 Do remember that this example is using AWS KMS which involves costs.
 
