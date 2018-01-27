@@ -1,4 +1,4 @@
-# KMS-AAD
+# KMS-AAD [![Build Status](https://travis-ci.org/eyal-lupu/KMS-AAD.svg?branch=master)](https://travis-ci.org/eyal-lupu/KMS-AAD)
 
 This git repository is the implementation of my blog post at: http://blog.eyallupu.com/2018/01/encryption-context-aad-with-aws-kms.html
 
