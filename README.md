@@ -83,5 +83,3 @@ However, if Bob will try to fetch the same secret he will be blocked by the KMS
 
 ## Costs
 Do remember that this example is using AWS KMS which involves costs.
-
-TODO: client example
