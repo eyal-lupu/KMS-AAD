@@ -98,7 +98,7 @@ public class SecretsController {
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
 
-		// We start by generating a data key
+		// We start by generating a data key and binding it to a context
 		GenerateDataKeyRequest dataKeyRequest = new GenerateDataKeyRequest().withKeyId(cmkAlias).withKeySpec("AES_128")
 				.withEncryptionContext(Collections.singletonMap("user", principal.getName()));
 		GenerateDataKeyResult dataKeyResult = awskms.generateDataKey(dataKeyRequest);
